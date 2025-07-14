@@ -12,7 +12,6 @@ RUN pip cache purge
 
 COPY ./pymuse ./pymuse
 COPY config.yml ./
-COPY .env ./
 
 COPY ./alembic ./alembic
 COPY alembic.ini ./
