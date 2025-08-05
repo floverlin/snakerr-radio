@@ -24,6 +24,8 @@ if len(sys.argv) == 2:
 with open(config_path, "r", encoding="utf-8") as file:
     _cfgYml: dict = yaml.safe_load(file)
 
+# ---------- flo ---------- ver ---------- lin >
+
 admins = []
 adminsStr = os.environ.get("ADMINS")
 if adminsStr:
