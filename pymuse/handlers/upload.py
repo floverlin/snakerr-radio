@@ -64,7 +64,9 @@ async def handle_upload(message: Message, state: FSMContext):
         id=None,
         uploader_id=message.from_user.id,
         title=None,
+        init_title=None,
         artist=None,
+        init_artist=None,
         comment=None,
     )
     audio_info = None
@@ -76,6 +78,8 @@ async def handle_upload(message: Message, state: FSMContext):
             return
 
         data["id"] = message.audio.file_id
+        data["init_title"] = message.audio.title
+        data["init_artist"] = message.audio.performer
 
     elif message.text:
         if not message.text.startswith(("http://", "https://")):
@@ -122,25 +126,46 @@ async def handle_upload(message: Message, state: FSMContext):
     await state.update_data(**data)
 
     await state.set_state(UploadSong.set_title)
+    init_title = await state.get_value("init_title")
     return [
-        m for m in (await message.answer("Введите название песни..."), audio_info) if m
+        m
+        for m in (
+            await message.answer(
+                f"Введите название песни...{f"\n(# = {init_title})" if init_title else ""}"
+            ),
+            audio_info,
+        )
+        if m
     ]
 
 
 @rt.message(F.text, UploadSong.set_title)
 async def handle_set_title(message: Message, state: FSMContext):
-    await state.update_data(title=message.text)
+    text = message.text
+    init_title = await state.get_value("init_title")
+    if text.strip() == "#" and init_title:
+        await state.update_data(title=init_title)
+    else:
+        await state.update_data(title=text)
+
     await state.set_state(UploadSong.set_artist)
+    init_artist = await state.get_value("init_artist")
     return [
         await message.answer(
-            f"Название: {await state.get_value("title")}\nНапишите исполнителя песни..."
+            f"Название: {await state.get_value("title")}\nНапишите исполнителя песни...{f"\n(# = {init_artist})" if init_artist else ""}"
         )
     ]
 
 
 @rt.message(F.text, UploadSong.set_artist)
 async def handle_set_artist(message: Message, state: FSMContext):
-    await state.update_data(artist=message.text)
+    text = message.text
+    init_artist = await state.get_value("init_artist")
+    if text.strip() == "#" and init_artist:
+        await state.update_data(artist=init_artist)
+    else:
+        await state.update_data(artist=text)
+
     same = await SongRepository.find_same(
         await state.get_value("title"),
         await state.get_value("artist"),
