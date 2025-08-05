@@ -24,9 +24,14 @@ if len(sys.argv) == 2:
 with open(config_path, "r", encoding="utf-8") as file:
     _cfgYml: dict = yaml.safe_load(file)
 
+admins = []
+adminsStr = os.environ.get("ADMINS")
+if adminsStr:
+    admins = adminsStr.split(",")
+
 _cfgEnv = {
     "token": os.environ["TELEGRAM_TOKEN"],
-    "admins": os.environ["ADMINS"].split(","),
+    "admins": admins,
 }
 
 _cfgYml.update(_cfgEnv)
